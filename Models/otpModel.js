@@ -5,16 +5,18 @@ const schema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-
+  email : {
+    type : String,
+    unique:true
+  },
+  expireAt : {
+    type : Date,
+    default : Date.now,
+    index : {expires : 300}
+  }
 }, { timestamps: true })
 
-schema.index(
-  { createdAt: 1 },
-  {
-    expireAfterSeconds: 60,
-    partialFilterExpression: { isValidated: false },
-  }
-);
+//
 
 const otpModel = mongoose.model("otp", schema);
 module.exports = otpModel

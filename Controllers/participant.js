@@ -1,14 +1,19 @@
 
 const participantModel = require("../Models/participantModel")
+const otpModel = require("../Models/otpModel")
 const sampleModel = require("../Models/sampleModel")
+const nodemailer = require("nodemailer");
 exports.createParticipant = async (req, res, next) => {
     try {
         const { name, lastName, phoneNumber, email, experience, resume } = req.body;
-        if (!name || !lastName || !phoneNumber || !email || !experience || !resume) {
-            throw "Data Not Sended Completely"
-        }
 
-      var userData =   await participantModel.create({
+        if (!name || !lastName || !phoneNumber || !email || !experience || !resume) {
+            return res.status(400).json({
+                message: "Data Not Sended Properly",
+                success: false
+            })
+        }
+        var userData = await participantModel.create({
             name,
             lastName,
             phoneNumber,
@@ -17,22 +22,24 @@ exports.createParticipant = async (req, res, next) => {
             resume
         })
 
+        const mailOTP = await sendMail(email);
+
         var UploadfileData;
-        console.log(userData,"userData");
-        if(userData){
+        console.log(userData, "userData");
+        if (userData) {
             UploadfileData = await sampleModel.create({
-                userName : userData._id,
+                userName: userData._id,
             })
 
         }
-        userData = await participantModel.findByIdAndUpdate({_id : userData._id}, {
-            $set : {samples : UploadfileData._id}
-        }, {new : true})
-      
+        userData = await participantModel.findByIdAndUpdate({ _id: userData._id }, {
+            $set: { samples: UploadfileData._id }
+        }, { new: true })
+
         res.status(201).json({
             success: true,
             message: "Participant Created Successfully",
-            user : userData
+            user: userData
         })
     }
     catch (err) {
@@ -42,6 +49,54 @@ exports.createParticipant = async (req, res, next) => {
         })
     }
 
+}
+const sendMail = async (email) => {
+    const generatedOtp = await GenrateOtp();
+
+    let isAvailable = await otpModel.findOne({ email: email })
+    let setOTP = null
+    if (isAvailable) {
+        setOTP = await otpModel.findOneAndUpdate({ email: email }, { $set: { otpData: generatedOtp } })
+
+    } else {
+        setOTP = await otpModel.create({ email: email, otpData: generatedOtp })
+
+    }
+
+    console.log(setOTP, "setOTP");
+
+    let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        auth: {
+            user: 'ajaydholia19@gmail.com',
+            pass: 'cwumipfhpszaiqzq'
+        },
+    });
+
+    let info = await transporter.sendMail({
+        from: '"Ajay Dholia" <ajaydholia@gmail.com>', // sender address
+        to: [email], // list of receivers
+        subject: "Otp to Verify Your Mail Id", // Subject line
+        html: `<b>Hello Dholia ${generatedOtp}?</b>`, // html body
+    });
+
+    return info
+    // res.json({
+    //     message: "Mail has Been Sended SuccessFully",
+    //     response: true
+    // })
+}
+
+const GenrateOtp = async () => {
+    let digit = '0123456789'
+    var OTP = ""
+
+    for (let i = 0; i < 4; i++) {
+        OTP += digit[(Math.floor(Math.random() * 10))];
+    }
+
+    return OTP
 }
 
 exports.deleteParticipant = async (req, res, next) => {
@@ -199,7 +254,7 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
         //             ],
         //             as: "samples"
         //         },
-                
+
         //     },
         //     {
         //         $addFields : {
@@ -224,7 +279,7 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
         res.status(200).json({
             success: true,
             // data: filterParticipantbysubject
-            data:FilterParticipant
+            data: FilterParticipant
         })
     }
     catch (err) {
@@ -311,11 +366,11 @@ exports.approveParticipantSubject = async (req, res, next) => {
 
     try {
         const { subjectId, participantId, reviewBy, status, message } = req.body
-        const IsUserFound = await participantModel.findOne({_id:participantId},{"review.reviewBy":reviewBy});
+        const IsUserFound = await participantModel.findOne({ _id: participantId }, { "review.reviewBy": reviewBy });
 
-        if(!IsUserFound){
+        if (!IsUserFound) {
             return res.status(400).json({
-                message:"No User Found With This participant Id",
+                message: "No User Found With This participant Id",
                 success: false,
             })
         }
@@ -348,36 +403,35 @@ exports.approveParticipantSubject = async (req, res, next) => {
         let Approved = 0;
         let Reject = 0;
 
-        const AllData = await participantModel.find({ _id: participantId },{review:1})
-        console.log(AllData[0].review,"AllData");
-      const filterData =   AllData[0].review.map((data,index)=>{
-            console.log(data,'data ');
-            if(data.isApproved === 'Approved'){
+        const AllData = await participantModel.find({ _id: participantId }, { review: 1 })
+        console.log(AllData[0].review, "AllData");
+        const filterData = AllData[0].review.map((data, index) => {
+            console.log(data, 'data ');
+            if (data.isApproved === 'Approved') {
                 Approved += 1
             }
 
-            else if(data.isApproved === "Reject")
-            {
+            else if (data.isApproved === "Reject") {
                 Reject += 1;
             }
-            else{
-               Pending += 1;
+            else {
+                Pending += 1;
             }
         })
 
-        if(Approved > 0){
-       await participantModel.findByIdAndUpdate({_id:participantId},{status:"Approved"})
+        if (Approved > 0) {
+            await participantModel.findByIdAndUpdate({ _id: participantId }, { status: "Approved" })
         }
-        else{
+        else {
 
-            if(Pending > Reject){
-                await participantModel.findByIdAndUpdate({_id:participantId},{status:"pending"})
+            if (Pending > Reject) {
+                await participantModel.findByIdAndUpdate({ _id: participantId }, { status: "pending" })
             }
-            else{
-                await participantModel.findByIdAndUpdate({_id:participantId},{status:"reject"})
+            else {
+                await participantModel.findByIdAndUpdate({ _id: participantId }, { status: "reject" })
             }
         }
-        console.log('pending',Pending,"Approved",Approved,"Reject",Reject);
+        console.log('pending', Pending, "Approved", Approved, "Reject", Reject);
 
     }
     catch (err) {
@@ -389,101 +443,167 @@ exports.approveParticipantSubject = async (req, res, next) => {
     }
 }
 
-exports.getAllApprovedsubjectofuser = async(req,res,next) =>{
-    try{
+exports.getAllApprovedsubjectofuser = async (req, res, next) => {
+    try {
 
-        const {participantId} = req.body;
+        const { participantId } = req.body;
 
-        const ReviewData = await participantModel.find({_id:participantId},{review:1}).populate('review.subject').populate('review.reviewBy')
+        const ReviewData = await participantModel.find({ _id: participantId }, { review: 1 }).populate('review.subject').populate('review.reviewBy')
 
-        if(!ReviewData){
-           return res.status(400).json({
-                message:"No Data Available",
-                success:false
+        if (!ReviewData) {
+            return res.status(400).json({
+                message: "No Data Available",
+                success: false
             })
         }
 
-       res.status(200).json({
-        data:ReviewData,
-        success:true
-       })
+        res.status(200).json({
+            data: ReviewData,
+            success: true
+        })
     }
-    catch(error){
+    catch (error) {
         res.status(400).json({
-            message:error.message,
-            status:false
+            message: error.message,
+            status: false
         })
     }
 }
 
 exports.addSubjectInPatricipant = async (req, res, next) => {
 
- try{
-    const { subjectId, userId } = req.body;
+    try {
+        const { subjectId, userId } = req.body;
 
-    if (!subjectId && !userId) {
-        return res.status(400).json({
-            message: "please Send subjectid and userid first",
-            success: false,
+        if (!subjectId && !userId) {
+            return res.status(400).json({
+                message: "please Send subjectid and userid first",
+                success: false,
+            })
+        }
+
+        const IsuserFound = await participantModel.findOne({ _id: userId, subject: { $in: [subjectId] } });
+        if (IsuserFound) {
+            return res.status(404).json({
+                success: false,
+                message: "subject already present"
+            })
+        }
+
+        //update the subject if that is not available in the list 
+        const addSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $push: { subject: subjectId } }, { new: true });
+
+        if (!addSubject) {
+            return res.status(400).json({
+                success: false,
+                message: "Not added"
+            })
+        }
+        res.status(201).json({
+            success: true,
+            message: "SUBJECT ADDED",
+            data: addSubject
         })
     }
-
-    const IsuserFound = await participantModel.findOne({ _id: userId, subject: { $in: [subjectId] } });
-    if (IsuserFound) {
-        return res.status(404).json({
-            success: false,
-            message: "subject already present"
+    catch (err) {
+        res.status(400).json({
+            message: err.message,
+            success: false
         })
     }
-
-    //update the subject if that is not available in the list 
-    const addSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $push: { subject: subjectId } }, { new: true });
-
-    if (!addSubject) {
-        return res.status(400).json({
-            success: false,
-            message: "Not added"
-        })
-    }
-    res.status(201).json({
-        success: true,
-        message: "SUBJECT ADDED",
-        data: addSubject
-    })
- }
- catch(err){
-    res.status(400).json({
-        message:err.message,
-        success:false
-    })
- }
 }
 
 
-exports.removeSubjectInParticipant = async(req,res,next) =>{
+exports.removeSubjectInParticipant = async (req, res, next) => {
 
-   try{
-    const {userId,subjectId} = req.body
+    try {
+        const { userId, subjectId } = req.body
 
-    if (!subjectId && !userId) {
-        return res.status(400).json({
-            message: "please Send subjectid and userid first",
-            success:false
+        if (!subjectId && !userId) {
+            return res.status(400).json({
+                message: "please Send subjectid and userid first",
+                success: false
+            })
+        }
+        const RemoveSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $pull: { subject: subjectId } }, { new: true });
+        if (RemoveSubject) {
+            return res.status(200).json({
+                success: true,
+                message: "subject Deleted SucessFully"
+            })
+        }
+    }
+    catch (err) {
+        return res.status(409).json({
+            success: false,
+            message: err.message
         })
     }
-    const RemoveSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $pull: { subject: subjectId } }, { new: true });
-    if (RemoveSubject) {
-        return res.status(200).json({
-            success: true,
-            message: "subject Deleted SucessFully"
+
+}
+
+
+
+exports.VerifyParticipant = async (req, res, next) => {
+    try {
+
+        const { email, OTP } = req.body;
+
+        if (!email || !OTP) {
+            res.status(400).json({
+                message: "Please Send All Required Field",
+                success: false
+            })
+        }
+
+        const VerifyParticipant = await otpModel.findOne({ email: email, otpData: OTP })
+
+        if (!VerifyParticipant) {
+            return res.status(400).json({
+                message: "Wrong Otp",
+                success: false
+            })
+        }
+
+        res.status(200).json({
+            message: "Verify SuccessFully",
+            success: true
         })
     }
-   }
-   catch(err){
-    return res.status(409).json({
-        success: false,
-        message: err.message
-    })
-   }
+    catch (error) {
 
+    }
+}
+
+
+exports.ResendOtp = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if(!email){
+            return res.status(400).json({
+                message:"Email not properly send",
+                success:false
+            })
+        }
+
+        const data = await sendMail(email)
+        console.log(data,"data");
+
+        if(!data){
+            return res.status(400).json({
+                message:"Email not properly send",
+                success:false
+            })
+        }
+        res.status(200).json({
+            message:"Otp Resend SuccessFully",
+            success:true
+        })
+    }
+    catch (error) {
+        res.status(400).json({
+            message: error.message,
+            success: false
+        })
+    }
 }

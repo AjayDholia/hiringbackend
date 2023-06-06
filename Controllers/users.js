@@ -1,7 +1,7 @@
 const userModel = require("../Models/UserModel");
 // const twilio = require('twilio')(process.env.SID,process.env.AUTH_TOKEN)
 const bcrypt = require("bcrypt")
-const nodemailer = require("nodemailer");
+
 exports.CreateUser = async (req, res, next) => {
 
     try {
@@ -54,7 +54,7 @@ exports.CreateUser = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
     try {
      
-        const isUserFound = await userModel.find();
+        const isUserFound = await userModel.find().populate('subjectType');
         if (!isUserFound) {
           return res.status.josn({
             message:"No Data Available",
@@ -107,34 +107,7 @@ exports.deleteUser = async (req, res, next) => {
     }
 }
 
-exports.sendMail = async(req,res,next) =>{
 
-    const generatedOtp = await GenrateOtp();
-    console.log(generatedOtp,"generatedOtp");
-
-    let transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        auth: {
-            user: 'ajaydholia19@gmail.com',
-            pass: 'cwumipfhpszaiqzq'
-        },
-      });
-
-
-      let info = await transporter.sendMail({
-        from: '"Ajay Dholia👻" <ajaydholia@gmail.com>', // sender address
-        to: ["garvmehta7701@gmail.com","ajaydholia19@gmail.com"], // list of receivers
-        subject: "Hello Dholia ", // Subject line
-        html: `<b>Hello Dholia ${generatedOtp}?</b>`, // html body
-      });
-
-
-      res.json({
-        message:"Mail has Been Sended SuccessFully",
-        response:true
-      })
-}
 
 
 exports.editUsers = async(req,res,next)=>{
@@ -225,13 +198,3 @@ res.status(200).json({
 }
 
 
-const GenrateOtp = async() =>{
-    let digit = '0123456789'
-    var OTP = ""
-
-    for(let i = 0; i < 4; i++){
-        OTP += digit[(Math.floor(Math.random()*10))];
-    }
-
-return OTP
-}
