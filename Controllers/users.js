@@ -54,7 +54,7 @@ exports.CreateUser = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
     try {
      
-        const isUserFound = await userModel.find().populate('subjectType');
+        const isUserFound = await userModel.find();
         if (!isUserFound) {
           return res.status.josn({
             message:"No Data Available",
@@ -200,6 +200,7 @@ exports.userLogin = async(req,res,next)=>{
 
     console.log(user.password , password , "password ");
      const isPasswordMatch  = await bcrypt.compare(password,user.password);
+     console.log(isPasswordMatch,"isPasswordMatch");
     if(!isPasswordMatch){
        return res.status(400).json({
             message:"Password Must Match",

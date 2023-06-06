@@ -87,7 +87,7 @@ exports.getAllParticipant = async (req, res, next) => {
         // let skip = (page - 1) * limit;
 
         // const AllParticipantModel = await participantModel.find({}).skip(skip).limit(limit).sort({ "createdAt": -1 }).populate('subject');
-        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('samples');
+        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('subject').populate('review.subject').populate('review.reviewBy');
         if (AllParticipantModel.length === 0) {
             res.status(200).json({
                 message: "No Participent Data Available",
@@ -309,47 +309,24 @@ exports.SearchByName = async (req, res, next) => {
 
 exports.approveParticipantSubject = async (req, res, next) => {
 
-//    try{
-//     const { subjectId, participantId, reviewBy, status, message } = req.body;
-
-//     if(!subjectId || !participantId || !reviewBy || !status ){
-//         return res.status(400).json({
-//             message:"Please Send All Required Field",
-//             status:false
-//         })
-//     }
-
-//     const ApproveData = await participantModel.findByIdAndUpdate({_id:participantId},{ $push: { review: { subject: subjectId, reviewBy: reviewBy, isApproved: status, message: message } } });
-
-
-//    }
-
-//    catch(error){
-//     res.status(400).json({
-//         message:error.message,
-//         success:false
-//     })
-//    }
-
-
     try {
         const { subjectId, participantId, reviewBy, status, message } = req.body
         const IsUserFound = await participantModel.findOne({_id:participantId},{"review.reviewBy":reviewBy});
-        console.log(IsUserFound,"AlreadyApproved");
-        if(IsUserFound){
+
+        if(!IsUserFound){
             return res.status(400).json({
                 message:"No User Found With This participant Id",
                 success: false,
             })
         }
 
-        const AlreadyApproved = await participantModel.findById({_id:participantId},{"review.reviewBy":reviewBy})
-        if(AlreadyApproved){
-           return  res.status(409).json({
-            message:"Subject Already Reviewed By The QC",
-            success:false,
-            })
-        }
+        // const AlreadyApproved = await participantModel.findById({_id:participantId},{"review.reviewBy":reviewBy})
+        // if(AlreadyApproved){
+        //    return  res.status(409).json({
+        //     message:"Subject Already Reviewed By The QC",
+        //     success:false,
+        //     })
+        // }
 
         const data = await participantModel.findOneAndUpdate({ _id: participantId },
             { $push: { review: { subject: subjectId, reviewBy: reviewBy, isApproved: status, message: message } } });
@@ -364,6 +341,44 @@ exports.approveParticipantSubject = async (req, res, next) => {
             message: `subject Approved ${status} SuccessFully`,
             success: `${status}`,
         })
+
+
+
+        let Pending = 0;
+        let Approved = 0;
+        let Reject = 0;
+
+        const AllData = await participantModel.find({ _id: participantId },{review:1})
+        console.log(AllData[0].review,"AllData");
+      const filterData =   AllData[0].review.map((data,index)=>{
+            console.log(data,'data ');
+            if(data.isApproved === 'Approved'){
+                Approved += 1
+            }
+
+            else if(data.isApproved === "Reject")
+            {
+                Reject += 1;
+            }
+            else{
+               Pending += 1;
+            }
+        })
+
+        if(Approved > 0){
+       await participantModel.findByIdAndUpdate({_id:participantId},{status:"Approved"})
+        }
+        else{
+
+            if(Pending > Reject){
+                await participantModel.findByIdAndUpdate({_id:participantId},{status:"pending"})
+            }
+            else{
+                await participantModel.findByIdAndUpdate({_id:participantId},{status:"reject"})
+            }
+        }
+        console.log('pending',Pending,"Approved",Approved,"Reject",Reject);
+
     }
     catch (err) {
         res.status(401).json({
@@ -379,7 +394,7 @@ exports.getAllApprovedsubjectofuser = async(req,res,next) =>{
 
         const {participantId} = req.body;
 
-        const ReviewData = await participantModel.find({_id:participantId},{review:1})
+        const ReviewData = await participantModel.find({_id:participantId},{review:1}).populate('review.subject').populate('review.reviewBy')
 
         if(!ReviewData){
            return res.status(400).json({

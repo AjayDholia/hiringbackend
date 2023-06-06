@@ -34,11 +34,11 @@ const schema = new mongoose.Schema({
         maxLength: 10,
         unique: true
     },
-    subjectType: {
-        type: [mongoose.Schema.Types.ObjectId],
-        required: true,
-        ref: "subject"
-    }
+    // subjectType: {
+    //     type: [mongoose.Schema.Types.ObjectId],
+    //     required: true,
+    //     ref: "subject"
+    // }
 }, { timestamps: true })
 
 const userModel = mongoose.model("user", schema)

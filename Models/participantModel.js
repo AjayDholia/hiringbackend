@@ -31,7 +31,7 @@ const schema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required:true,
+        required: true,
     },
     experience: {
         type: Number,
@@ -41,12 +41,22 @@ const schema = new mongoose.Schema({
         type: String,
         // required:true,
     },
+    status: {
+        type: String,
+        default: null
+    },
     review: [
         {
-            subject: mongoose.Schema.Types.ObjectId,
-            isApproved: Boolean,
+            subject: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'subject'
+            },
+            isApproved: String,
             // isApproved,
-            reviewBy: mongoose.Schema.Types.ObjectId,
+            reviewBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'user'
+            },
             message: String
         }
     ]

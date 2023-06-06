@@ -8,6 +8,7 @@ const participantRouter = require("./Routes/ParticipantRoutes");
 const subjectRouter = require("./Routes/SubjectRoutes");
 const superAdminRoutes = require("./Routes/SuperAdminRoutes");
 const sampleRouter = require('./Routes/SampleRoutes')
+const uploadRoutes = require("./Routes/UploadRoutes");
 const userRoutes = require("./Routes/UserRoutes")
 const app = express();
 dotenv.config();
@@ -40,6 +41,7 @@ app.use("/api/v1/sample", sampleRouter)
 app.use("/api/v1/subject", subjectRouter)
 app.use("/api/v1/admin", superAdminRoutes)
 app.use("/api/v1/user", userRoutes)
+app.use("/api/v1/upload", uploadRoutes);
 
 
 
