@@ -7,8 +7,9 @@ exports.createSubject = async (req, res, next) => {
             throw "fill the Subject Name First"
         }
         await subjectModel.create({
-            subjectName: subjectName
+            subjectName: subjectName.toLowerCase()
         })
+
         res.status(200).json({
             success: true,
             message: "Subject Has Been Added SuccessFully",
@@ -17,11 +18,11 @@ exports.createSubject = async (req, res, next) => {
     }
     catch (err) {
         let error = null
-        if (err.message.code === 11000) {
+        if (err.code === 11000) {
             error = "duplicate Name Can't  Store"
         }
         res.status(400).json({
-            success: 'fail',
+            success: false,
             message: error || err,
             status: 400
         })

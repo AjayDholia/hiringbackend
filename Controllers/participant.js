@@ -635,7 +635,7 @@ exports.ResendOtp = async (req, res, next) => {
         const { email } = req.body;
         if(!email){
             return res.status(400).json({
-                message:"Email not properly send",
+                message:"please send email first",
                 success:false
             })
         }
@@ -645,10 +645,11 @@ exports.ResendOtp = async (req, res, next) => {
 
         if(!data){
             return res.status(400).json({
-                message:"Email not properly send",
+                message:"Email not found",
                 success:false
             })
         }
+        
         res.status(200).json({
             message:"Otp Resend SuccessFully",
             success:true
