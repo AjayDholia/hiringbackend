@@ -35,7 +35,7 @@ exports.getAllSubject = async (req, res, next) => {
         const allDataofSubject = await subjectModel.find();
         console.log(allDataofSubject, 'allDataofSubject');
         if (allDataofSubject.length === 0) {
-            res.status(400).json({
+            res.status(200).json({
                 message: "No Data Available",
                 success:true
             })
@@ -65,7 +65,7 @@ exports.editSubject = async (req, res, next) => {
         const { subjectName, subjectId } = req.body;
 
         if (subjectName.length === 0 && !subjectName) {
-            res.status(500).json({
+            res.status(400).json({
                 message: "please Send The Data First",
                 success:false
             })
