@@ -37,7 +37,7 @@ exports.getAllSubject = async (req, res, next) => {
         if (allDataofSubject.length === 0) {
             res.status(400).json({
                 message: "No Data Available",
-                success:false
+                success:true
             })
         }
         else {
