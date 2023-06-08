@@ -29,7 +29,7 @@ const schema = new mongoose.Schema({
         require: true,
     },
     phoneNumber: {
-        type: Number,
+        type: String,
         minLength: 10,
         maxLength: 10,
         unique: true

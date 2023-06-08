@@ -3,13 +3,14 @@ const participantModel = require("../Models/participantModel")
 const otpModel = require("../Models/otpModel")
 const sampleModel = require("../Models/sampleModel")
 const nodemailer = require("nodemailer");
+var ObjectId = require('mongodb').ObjectId;
 exports.createParticipant = async (req, res, next) => {
     try {
         const { name, lastName, phoneNumber, email, experience, resume } = req.body;
 
         if (!name || !lastName || !phoneNumber || !email || !experience || !resume) {
-            return res.status(400).json({
-                message: "Data Not Sended Properly",
+            return res.status(200).json({
+                message: "Please Send Required Field",
                 success: false
             })
         }
@@ -92,13 +93,59 @@ const GenrateOtp = async () => {
     let digit = '0123456789'
     var OTP = ""
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
         OTP += digit[(Math.floor(Math.random() * 10))];
     }
 
     return OTP
 }
 
+exports.getParticipantSubject = async(req,res,next)=>{
+   try{
+    const {userId} = req.body;
+
+    if(!userId){
+        returnres.status(400).json({
+            message:"User id Not Found",
+            success:false
+        })
+    }
+
+    // const data = await participantModel.findOne({_id:userId},{subject:1}).populate('subject')
+    const data = await participantModel.findOne({_id:userId}).populate({ 
+        path: 'samples',
+        populate: {
+          path: 'subjectData',
+          model: 'samples',
+          populate : {
+            path: 'subject',
+            model: 'subject',
+          }
+        } 
+     })
+    // .populate('samples.subjectData.subject')
+    if(!data){
+        return res.status(200).json({
+            message:"No Data Found",
+            success:true,
+            data:data
+        })
+    }
+
+    res.status(200).json({
+        message:data,
+        success:true
+    })
+   }
+   catch(error){
+    res.status(400).json({
+        message:error.message,
+        success:false
+    })
+   }
+
+
+}
 exports.deleteParticipant = async (req, res, next) => {
     try {
         const { id } = req.query;
@@ -142,7 +189,7 @@ exports.getAllParticipant = async (req, res, next) => {
         // let skip = (page - 1) * limit;
 
         // const AllParticipantModel = await participantModel.find({}).skip(skip).limit(limit).sort({ "createdAt": -1 }).populate('subject');
-        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('subject').populate('review.subject').populate('review.reviewBy');
+        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('subject').populate('review.subject').populate('review.reviewBy').populate('samples');
         if (AllParticipantModel.length === 0) {
             res.status(200).json({
                 message: "No Participent Data Available",
@@ -492,6 +539,7 @@ exports.addSubjectInPatricipant = async (req, res, next) => {
 
         //update the subject if that is not available in the list 
         const addSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $push: { subject: subjectId } }, { new: true });
+   
 
         if (!addSubject) {
             return res.status(400).json({
@@ -517,7 +565,10 @@ exports.addSubjectInPatricipant = async (req, res, next) => {
 exports.removeSubjectInParticipant = async (req, res, next) => {
 
     try {
-        const { userId, subjectId } = req.body
+        var { userId, subjectId } = req.query
+        console.log(userId, subjectId);
+
+        userId = new ObjectId(userId);
 
         if (!subjectId && !userId) {
             return res.status(400).json({
@@ -525,11 +576,14 @@ exports.removeSubjectInParticipant = async (req, res, next) => {
                 success: false
             })
         }
-        const RemoveSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $pull: { subject: subjectId } }, { new: true });
+        const RemoveSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $pull: { subject: subjectId } }, { new: true }).populate('subject');
+
+        UploadfileData = await sampleModel.findOneAndUpdate({userName : userId}, { $pull : { subjectData : { subject : subjectId}}}, {new : true});
         if (RemoveSubject) {
             return res.status(200).json({
                 success: true,
-                message: "subject Deleted SucessFully"
+                message: "subject Deleted SucessFully",
+                data:RemoveSubject
             })
         }
     }

@@ -9,7 +9,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.route("/").post(upload.single("file"), (req, res) => {
-  console.log(req);
   const containerName = "hiringappdata";
   const fileName = new Date().valueOf() + "_" + req.file.originalname;
   const fileData = req.file.buffer;
@@ -22,7 +21,7 @@ router.route("/").post(upload.single("file"), (req, res) => {
       if (error) {
         console.error("Error creating container:", error);
         res.status(500).send("Error creating container");
-      } 
+      }
       else {
         // Upload the file to the container
         blobService.createBlockBlobFromStream(
@@ -40,7 +39,12 @@ router.route("/").post(upload.single("file"), (req, res) => {
               console.log("File uploaded successfully.");
               res
                 .status(200)
-                .send({ msg: "File uploaded successfully", fileUrl });
+                .send({
+                  msg: "File uploaded successfully", fileUrl,
+                  name: req.file.originalname,
+                  size: req.file.size,
+                  date: response.headers.date,
+                });
             }
           }
         );

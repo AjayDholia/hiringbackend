@@ -15,14 +15,15 @@ exports.CreateUser = async (req, res, next) => {
             })
         }
 
-        const salt = await bcrypt.genSalt(10);
-    const secPass = await bcrypt.hash(password,salt);
+    //     const salt = await bcrypt.genSalt(10);
+    // const secPass = await bcrypt.hash(password,salt);
 
       const user = await userModel.create({
             name,
             lastName,
             email,
-           password: secPass,
+        //    password: secPass,
+        password,
             role,
             phoneNumber,
             subjectType
@@ -77,7 +78,7 @@ exports.getAllUsers = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
     try {
 
-        const { userId } = req.body;
+        const { userId } = req.query;
         if (!userId) {
           return res.status(400).json({
             message:"please send required Field",
@@ -113,21 +114,19 @@ exports.deleteUser = async (req, res, next) => {
 exports.editUsers = async(req,res,next)=>{
     try{
 
-        const {userId,name}= req.body;
+        const {userId,name,lastName,password,email,phoneNumber,subjectType}= req.body;
 
-        // ,lastName,password,email} 
-        // ,lastName:lastName,password:password,email:email
-    const user = await userModel.findOneAndUpdate({_id:userId},{ name:name} ,{new:true})
+    const user = await userModel.findOneAndUpdate({_id:userId},{ name:name,lastName:lastName,password:password,email:email,phoneNumber:phoneNumber,subjectType:subjectType} ,{new:true})
 if(!user){
 return res.status(400).json({
     message:"user Not Available for this id",
     success:false
 })
 }
-
 res.status(200).json({
     message:"user Updated Successfully",
-    success:true
+    success:true,
+    data:user
 })
     }
     catch(error){
@@ -172,14 +171,20 @@ exports.userLogin = async(req,res,next)=>{
     }
 
     console.log(user.password , password , "password ");
-     const isPasswordMatch  = await bcrypt.compare(password,user.password);
-     console.log(isPasswordMatch,"isPasswordMatch");
-    if(!isPasswordMatch){
-       return res.status(400).json({
-            message:"Password Must Match",
-            success:false
-        })
+    if(password !== user.password){
+        return res.status(400).json({
+                    message:"Password Must Match",
+                    success:false
+                })
     }
+    //  const isPasswordMatch  = await bcrypt.compare(password,user.password);
+    //  console.log(isPasswordMatch,"isPasswordMatch");
+    // if(!isPasswordMatch){
+    //    return res.status(400).json({
+    //         message:"Password Must Match",
+    //         success:false
+    //     })
+    // }
 
 
 res.status(200).json({

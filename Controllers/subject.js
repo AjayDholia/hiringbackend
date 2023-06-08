@@ -31,10 +31,11 @@ exports.createSubject = async (req, res, next) => {
 // get All Subject Api
 exports.getAllSubject = async (req, res, next) => {
     try {
+        console.log('here')
         const allDataofSubject = await subjectModel.find();
         console.log(allDataofSubject, 'allDataofSubject');
         if (allDataofSubject.length === 0) {
-            res.status(200).json({
+            res.status(400).json({
                 message: "No Data Available",
                 success:false
             })
@@ -49,9 +50,10 @@ exports.getAllSubject = async (req, res, next) => {
 
     }
     catch (err) {
+        console.log('error catch',err)
         res.status(400).json({
             error: err,
-            success:true
+            success:false
         })
     }
 

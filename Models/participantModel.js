@@ -39,7 +39,7 @@ const schema = new mongoose.Schema({
     },
     resume: {
         type: String,
-        // required:true,
+        required:true,
     },
     status: {
         type: String,

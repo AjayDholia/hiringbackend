@@ -1,10 +1,11 @@
 const sampleModel = require("../Models/sampleModel")
 const participantModel = require("../Models/participantModel")
+var ObjectId = require('mongodb').ObjectId;
 
 
 exports.DeleteFile = async(req,res,next) =>{
  try{
-    const {subjectDataId} = req.body;
+    const {subjectDataId,fileUrl} = req.body;
 
     if(!subjectDataId) {
         return res.status(400).json({
@@ -12,7 +13,7 @@ exports.DeleteFile = async(req,res,next) =>{
             status:false
         })
     }
-    const IsUserFound = await sampleModel.findOneAndUpdate({"subjectData._id": subjectDataId}, { $pull :{"subjectData.$.file" : "show to sokle"}},{new:true})
+    const IsUserFound = await sampleModel.findOneAndUpdate({"subjectData._id": subjectDataId}, { $pull :{"subjectData.$.file" :fileUrl }},{new:true})
     if(!IsUserFound){
      return res.status(400).json({
         message:"Does't Found Any User With That Id",
@@ -41,16 +42,17 @@ exports.AddSampleSubject = async(req,res,next) =>{
     const IsUserAvailable = await sampleModel.findOne({userName:userId});
 
     var UploadfileData;
+    var addSubject;
     if(IsUserAvailable){
         UploadfileData = await sampleModel.findByIdAndUpdate({_id : IsUserAvailable._id}, { $push : { subjectData : { subject : subjectId}}}, {new : true});
+
+       addSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $push: { subject: subjectId } }, { new: true });
     }
-
-    const addSubject = await participantModel.findOneAndUpdate({ _id: userId }, { $push: { subject: subjectId } }, { new: true });
-
 
     res.status(200).json({
         message:"subject Added Successfully",
-        status:true
+        status:true,
+        data:UploadfileData
     })
   }
   catch(err){
@@ -96,4 +98,47 @@ exports.AddFile = async(req,res,next)=>{
         })
     }
 
+}
+
+
+exports.getAllfile = async(req,res,next) =>{
+    try{
+         var {subjectDataId, userId} = req.body;
+         subjectDataId = new ObjectId(subjectDataId);
+        const IsFileAdded = await sampleModel.find({"subjectData._id": subjectDataId});
+        // const IsFileAdded = await sampleModel.aggregate([
+        //     {
+        //         $match : {"subjectData._id": subjectDataId}
+        //     },
+        //     {
+        //         $project : {
+        //             subjectData : 1,
+        //             _id : 0
+        //         }
+        //     },
+        //     {
+        //         $match : { "$subjectData._id" : subjectDataId}
+        //     }
+        // ]);
+
+        console.log(IsFileAdded);
+        if(!IsFileAdded){
+            return res.status(400).json({
+                message:"User Not Found",
+                success:false
+            })
+        }
+
+       res.status(200).json({
+        message:"Data Send SuccessFully",
+        success:true,
+        data:IsFileAdded
+       })
+    }
+    catch(error){
+        return res.status(400).json({
+            status:false,
+            message:error.message
+        })
+    }
 }

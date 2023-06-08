@@ -36,7 +36,7 @@ app.listen(process.env.PORT, () => {
 })
 
 // All Routes
-app.use("/api/v1/participant", participantRouter)
+app.use("/api/v1/participant", participantRouter,)
 app.use("/api/v1/sample", sampleRouter)
 app.use("/api/v1/subject", subjectRouter)
 app.use("/api/v1/admin", superAdminRoutes)
