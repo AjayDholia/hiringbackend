@@ -19,7 +19,7 @@ exports.createSubject = async (req, res, next) => {
     catch (err) {
         let error = null
         if (err.code === 11000) {
-            error = "duplicate Name Can't  Store"
+            error = "Already Added"
         }
         res.status(400).json({
             success: false,

@@ -70,8 +70,8 @@ const sendMail = async (email) => {
         host: "smtp.gmail.com",
         port: 587,
         auth: {
-            user: 'ajaydholia19@gmail.com',
-            pass: 'cwumipfhpszaiqzq'
+            user: 'hiringapp8@gmail.com',
+            pass: 'fmgxybgbtgrehykp'  
         },
     });
 
