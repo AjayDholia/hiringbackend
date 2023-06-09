@@ -79,10 +79,18 @@ exports.editSubject = async (req, res, next) => {
         })
     }
     catch (err) {
-        res.status(500).json({
-            message: err.message,
-            success:false
+        let error = null
+        if (err.code === 11000) {
+            error = "Already Added"
+        }
+        res.status(400).json({
+            success: false,
+            message: error || err,
         })
+        // res.status(500).json({
+        //     message: err.message,
+        //     success:false
+        // })
     }
 }
 
