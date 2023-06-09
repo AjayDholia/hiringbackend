@@ -189,7 +189,17 @@ exports.getAllParticipant = async (req, res, next) => {
         // let skip = (page - 1) * limit;
 
         // const AllParticipantModel = await participantModel.find({}).skip(skip).limit(limit).sort({ "createdAt": -1 }).populate('subject');
-        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('subject').populate('review.subject').populate('review.reviewBy').populate('samples');
+        const AllParticipantModel = await participantModel.find({}).sort({ "createdAt": -1 }).populate('subject').populate('review.subject').populate('review.reviewBy').populate({ 
+            path: 'samples',
+            populate: {
+              path: 'subjectData',
+              model: 'samples',
+              populate : {
+                path: 'subject',
+                model: 'subject',
+              }
+            } 
+         });
         if (AllParticipantModel.length === 0) {
             res.status(200).json({
                 message: "No Participent Data Available",
