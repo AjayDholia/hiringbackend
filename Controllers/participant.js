@@ -76,7 +76,7 @@ const sendMail = async (email) => {
     });
 
     let info = await transporter.sendMail({
-        from: '"Hiring Team" <ajaydholia@gmail.com>', // sender address
+        from: '"Hiring Team" <hiringapp8@gmail.com>', // sender address
         to: [email], // list of receivers
         subject: "Otp to Verify Your Mail Id", // Subject line
         html: `<b>Hello Dholia ${generatedOtp}?</b>`, // html body

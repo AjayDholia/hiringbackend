@@ -71,7 +71,8 @@ exports.editSubject = async (req, res, next) => {
                 success:false
             })
         }
-        await subjectModel.findOneAndUpdate({ _id: subjectId }, { subjectName })
+        const subjectdata = subjectName.toLowerCase();
+        await subjectModel.findOneAndUpdate({ _id: subjectId }, { subjectdata })
 
         res.status(201).json({
             message: "Subject Name Updated SuccessFully",
