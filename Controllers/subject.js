@@ -65,14 +65,14 @@ exports.editSubject = async (req, res, next) => {
     try {
         const { subjectName, subjectId } = req.body;
 
-        if (subjectName.length === 0 && !subjectName) {
+        if (!subjectName && subjectName.length === 0) {
             res.status(400).json({
                 message: "please Send The Data First",
                 success:false
             })
         }
-        const subjectdata = subjectName.toLowerCase();
-        await subjectModel.findOneAndUpdate({ _id: subjectId }, { subjectdata })
+
+        await subjectModel.findOneAndUpdate({ _id: subjectId }, { subjectName:subjectName.toLowerCase() })
 
         res.status(201).json({
             message: "Subject Name Updated SuccessFully",
@@ -88,10 +88,6 @@ exports.editSubject = async (req, res, next) => {
             success: false,
             message: error || err,
         })
-        // res.status(500).json({
-        //     message: err.message,
-        //     success:false
-        // })
     }
 }
 
