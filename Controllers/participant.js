@@ -271,23 +271,30 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
 
         let FilterParticipant = await participantModel.aggregate([
             {
-                $lookup: {
-                    from: "subjects",
-                    localField: "subject",
-                    foreignField: "_id",
-                    as: "subject"
-                }
+              $lookup: {
+                from: "subjects",
+                localField: "subject",
+                foreignField: "_id",
+                as: "subject",
+              },
             },
             {
-                $match: {
-                    "subject.subjectName": { $in: subject }
-                }
+              $lookup: {
+                from: "samples",
+                localField: "samples",
+                foreignField: "_id",
+                as: "sample",
+              },
+            },
+            {
+              $match: {
+                "subject.subjectName": { $in: subject },
+              },
             },
             { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: limit }
-        ])
-
+          //   { $skip: skip },
+          //   { $limit: limit },
+          ]);
         // let filterParticipantbysubject = await participantModel.aggregate([
         //     {
         //         $lookup:{
@@ -336,7 +343,8 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
         res.status(200).json({
             success: true,
             // data: filterParticipantbysubject
-            data: FilterParticipant
+            data: FilterParticipant,
+            dataCount : FilterParticipant.length
         })
     }
     catch (err) {
