@@ -265,10 +265,6 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
                 success: false,
             })
         }
-        const page = 1
-        const limit = 4
-
-        let skip = (page - 1) * limit;
 
         let FilterParticipant = await participantModel.aggregate([
             {
@@ -294,53 +290,8 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
             },
             { $sort: { createdAt: -1 } },
 
-          //   { $skip: skip },
-          //   { $limit: limit },
           ]);   
-        // let filterParticipantbysubject = await participantModel.aggregate([
-        //     {
-        //         $lookup:{
-        //             from: "samples",
-        //             localField: "samples",
-        //             foreignField: "_id",
-        //             pipeline : [
-        //                 {
-        //                     $project : {
-        //                         subject : "$subjectData.subject"
-        //                     }
-        //                 },
-        //             {
-        //                 $lookup : {
-        //                     from : "subjects",
-        //                     localField : "subject",
-        //                     foreignField : "_id",
-        //                     as : "subject"
-        //                 }
-        //             }
-        //             ],
-        //             as: "samples"
-        //         },
 
-        //     },
-        //     {
-        //         $addFields : {
-        //             samples :  {
-        //                 $arrayElemAt : ["$samples", 0]
-        //             }
-        //         }
-        //     },
-        //     // {
-        //     //     $group : {
-        //     //         _id : "$samples.subject.subjectName",
-        //     //         participant : { $push : "$$CURRENT"}
-        //     //     }
-        //     // },
-        //      {
-        //         $match: {
-        //             "samples.subject.subjectName": { $in: subject }
-        //         }
-        //     },
-        // ])
 
         res.status(200).json({
             success: true,

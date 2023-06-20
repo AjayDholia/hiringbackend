@@ -108,9 +108,6 @@ exports.deleteUser = async (req, res, next) => {
     }
 }
 
-
-
-
 exports.editUsers = async(req,res,next)=>{
     try{
 
@@ -160,9 +157,7 @@ exports.userLogin = async(req,res,next)=>{
     }
 
 
-    const user = await userModel.findOne({phoneNumber})
-
-    console.log(user,"user data");
+    const user = await userModel.findOne({phoneNumber:phoneNumber}).populate('subjectType');
     if(!user){
         return res.status(400).json({
             message:"Phone Number or Password Wrong",
@@ -177,14 +172,6 @@ exports.userLogin = async(req,res,next)=>{
                     success:false
                 })
     }
-    //  const isPasswordMatch  = await bcrypt.compare(password,user.password);
-    //  console.log(isPasswordMatch,"isPasswordMatch");
-    // if(!isPasswordMatch){
-    //    return res.status(400).json({
-    //         message:"Password Must Match",
-    //         success:false
-    //     })
-    // }
 
 
 res.status(200).json({
