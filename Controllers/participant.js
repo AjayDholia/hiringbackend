@@ -2,6 +2,7 @@
 const participantModel = require("../Models/participantModel")
 const otpModel = require("../Models/otpModel")
 const sampleModel = require("../Models/sampleModel")
+const Subject = require("../Models/subjectModel")
 const nodemailer = require("nodemailer");
 var ObjectId = require('mongodb').ObjectId;
 exports.createParticipant = async (req, res, next) => {
@@ -292,9 +293,10 @@ exports.FilterParticipentBySubject = async (req, res, next) => {
               },
             },
             { $sort: { createdAt: -1 } },
+
           //   { $skip: skip },
           //   { $limit: limit },
-          ]);
+          ]);   
         // let filterParticipantbysubject = await participantModel.aggregate([
         //     {
         //         $lookup:{
