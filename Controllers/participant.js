@@ -393,14 +393,6 @@ exports.approveParticipantSubject = async (req, res, next) => {
             })
         }
 
-        // const AlreadyApproved = await participantModel.findById({_id:participantId},{"review.reviewBy":reviewBy})
-        // if(AlreadyApproved){
-        //    return  res.status(409).json({
-        //     message:"Subject Already Reviewed By The QC",
-        //     success:false,
-        //     })
-        // }
-
         const data = await participantModel.findOneAndUpdate({ _id: participantId },
             { $push: { review: { subject: subjectId, reviewBy: reviewBy, isApproved: status, message: message } } });
 
@@ -425,11 +417,11 @@ exports.approveParticipantSubject = async (req, res, next) => {
         console.log(AllData[0].review, "AllData");
         const filterData = AllData[0].review.map((data, index) => {
             console.log(data, 'data ');
-            if (data.isApproved === 'Approved') {
+            if (data.isApproved === 'true') {
                 Approved += 1
             }
 
-            else if (data.isApproved === "Reject") {
+            else if (data.isApproved === "false") {
                 Reject += 1;
             }
             else {
