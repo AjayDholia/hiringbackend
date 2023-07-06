@@ -52,7 +52,6 @@ const schema = new mongoose.Schema({
                 ref: 'subject'
             },
             isApproved: String,
-            // isApproved,
             reviewBy: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'user'

@@ -13,7 +13,8 @@ exports.createParticipant = async (req, res, next) => {
       !lastName ||
       !phoneNumber ||
       !email ||
-      !experience ||
+      !experience 
+      ||
       !resume
     ) {
       return res.status(200).json({
@@ -98,9 +99,8 @@ const sendMail = async ({ name, lastName, email }) => {
       <div style="border-bottom:1px solid #eee">
         <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Writlance Services</a>
       </div>
-      <p style="font-size:1.1em">Hello ${name || setOTP.name} ${
-      lastName || setOTP.lastName
-    }, <b>YOUR OTP</b> for registration on Writlance Service is</p>
+      <p style="font-size:1.1em">Hello ${name || setOTP.name} ${lastName || setOTP.lastName
+      }, <b>YOUR OTP</b> for registration on Writlance Service is</p>
       <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">${generatedOtp}</h2>
       <p style="font-size:0.9em;">Thanks and Regards <br/>Writlance Services</p>
     </div>
@@ -408,19 +408,56 @@ exports.approveParticipantSubject = async (req, res, next) => {
       });
     }
 
-    const data = await participantModel.findOneAndUpdate(
-      { _id: participantId },
-      {
-        $push: {
-          review: {
-            subject: subjectId,
-            reviewBy: reviewBy,
-            isApproved: status,
-            message: message,
+    const isAlreadyReview = await participantModel.findOne(
+      { $and: [{ _id: participantId }, { 'review.reviewBy': reviewBy }, { 'review.subject': subjectId }] }
+    )
+
+    let data = null
+    if (!isAlreadyReview) {
+
+      data = await participantModel.findOneAndUpdate(
+        { _id: participantId },
+        {
+          $push: {
+            review: {
+              subject: subjectId,
+              reviewBy: reviewBy,
+              isApproved: status,
+              message: message,
+            },
           },
-        },
+        }
+      );
+    } else {
+      let oldReview = isAlreadyReview.review;
+    console.log("isAlreadyReview.review",isAlreadyReview.review);
+      let myObject = oldReview.find((e) => e.subject.toString() == subjectId)
+
+      myObject = {
+        ...myObject._doc, isApproved: status
       }
-    );
+console.log("myObject",myObject);
+
+
+console.log("oldReview",oldReview)
+      let myNewData = oldReview.filter((e) => e.subject.toString() !== subjectId)
+    myNewData.push(myObject)
+
+      console.log("MYnewData",myNewData);
+
+  data = await participantModel.findOneAndUpdate(
+    { _id: participantId },
+    {
+      $set: {
+        review: myNewData
+      },
+    }
+  );
+      console.log("data",data)
+
+    }
+
+
 
     if (!data) {
       return res.status(400).json({
@@ -624,7 +661,7 @@ exports.VerifyParticipant = async (req, res, next) => {
       message: "Verify SuccessFully",
       success: true,
     });
-  } catch (error) {}
+  } catch (error) { }
 };
 
 exports.ResendOtp = async (req, res, next) => {
