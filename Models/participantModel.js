@@ -4,13 +4,13 @@ const schema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, "Please Enter Name"],
-        minLength: [4, "Title must be at Least 4 Character"],
+        // minLength: [4, "Title must be at Least 4 Character"],
         maxLength: [80, "Title can't exceed 80 Character"],
     },
     lastName: {
         type: String,
         required: [true, "Please Enter Your Last Name"],
-        minLength: [4, "Title must be at Least 4 Character"],
+        // minLength: [4, "Title must be at Least 4 Character"],
         maxLength: [80, "Title can't exceed 80 Character"],
     },
     samples: {
